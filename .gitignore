@@ -1,0 +1,58 @@
+# Build output and dependencies
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/.angular/
+**/TestResults/
+**/coverage/
+*.trx
+*.coverage
+*.coveragexml
+
+# IDE state and temporary verification
+.vs/
+*.user
+*.suo
+.verification/
+*.log
+*.tmp
+*.temp
+
+# Local secret/environment files; keep explicitly named configuration templates
+.env
+.env.*
+!.env.example
+!.env.*.example
+!.env.template
+!.env.*.template
+secrets.json
+appsettings.Local.json
+appsettings.*.Local.json
+
+# Private keys, certificate bundles and local certificate files
+*.key
+*.pem
+*.pfx
+*.p12
+*.cer
+*.crt
+*.der
+*.p7b
+*.p7c
+*.snk
+*.jks
+*.keystore
+
+# Local databases, journals and backups (migration/seed .sql files remain included)
+*.mdf
+*.ndf
+*.ldf
+*.bak
+*.trn
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.sqlite3-*

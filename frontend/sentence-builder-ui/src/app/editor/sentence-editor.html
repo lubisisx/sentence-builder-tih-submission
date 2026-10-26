@@ -1,0 +1,63 @@
+<div class="builder-grid">
+  <section class="panel editor" aria-labelledby="editor-heading" [attr.aria-busy]="busy()">
+    <div class="section-heading">
+      <h1 id="editor-heading" tabindex="-1">Build a sentence</h1>
+      <span class="count">{{ draft().length }} / 100</span>
+    </div>
+    @if (editingId() !== null) { <p class="editing-badge">Editing sentence #{{ editingId() }}</p> }
+    <p class="muted" id="editor-hint">Tap a word to add it. Drag to arrange, or use the move buttons.</p>
+    <div class="sentence-canvas" [class.drag-active]="dragging()">
+      <ol cdkDropList cdkScrollable id="sentence-drop" class="word-list" cdkDropListOrientation="mixed"
+          [cdkDropListData]="draft()" [cdkDropListDisabled]="busy()"
+          (cdkDropListDropped)="drop($event)" aria-label="Selected words" aria-describedby="editor-hint">
+        @for (word of draft(); track word.key; let i = $index) {
+          <li cdkDrag [cdkDragData]="word" [cdkDragDisabled]="busy()" class="word-chip"
+              (cdkDragStarted)="dragging.set(true)" (cdkDragEnded)="dragging.set(false)">
+            <div class="word-caption"><span class="position">{{ i + 1 }}</span><strong>{{ word.text }}</strong></div>
+            <div class="word-actions">
+              <span cdkDragHandle class="drag-handle" aria-hidden="true" title="Drag to reorder">&#10303;</span>
+              <button type="button" (click)="move(i, -1)" [disabled]="busy() || i === 0" [attr.aria-label]="'Move word ' + (i + 1) + ' left'">&#8592;</button>
+              <button type="button" (click)="move(i, 1)" [disabled]="busy() || i === draft().length - 1" [attr.aria-label]="'Move word ' + (i + 1) + ' right'">&#8594;</button>
+              <button [id]="'word-remove-' + i" type="button" (click)="remove(i)" [disabled]="busy()" [attr.aria-label]="'Remove word ' + (i + 1) + ': ' + word.text">&#215;</button>
+            </div>
+          </li>
+        }
+      </ol>
+      @if (draft().length === 0) { <p class="empty-editor">Your sentence starts here.<span>Tap a word from the library or drop it here.</span></p> }
+      <p class="drop-hint" [class.sr-only]="!dragging()">Drop here � library words are added at the end</p>
+      <p id="sentence-preview" class="sentence-preview" tabindex="0" aria-label="Assembled sentence" aria-live="polite" aria-atomic="true">{{ preview() || 'Choose your first word.' }}</p>
+    </div>
+    @if (atLimit()) { <p class="notice" role="status">100-word limit reached. Remove a word to add another.</p> }
+    @if (error()) { <p class="notice error" role="alert">{{ error() }}</p> }
+    <p class="sr-only" role="status" aria-atomic="true">{{ announcement() }}</p>
+    <div class="editor-footer">
+      <button type="button" class="quiet" (click)="cancelDraft.emit()" [disabled]="busy() || (draft().length === 0 && editingId() === null)">{{ editingId() === null ? 'Clear draft' : 'Cancel edit' }}</button>
+      <button id="save-sentence" class="primary" type="button" (click)="saveDraft.emit()" [disabled]="busy() || draft().length === 0">{{ saving() ? 'Saving...' : editingId() === null ? 'Save sentence' : 'Save changes' }}</button>
+    </div>
+  </section>
+  <section class="panel library" aria-labelledby="library-heading">
+    <div class="section-heading"><h2 id="library-heading">Word library</h2><span class="library-count">{{ groups().length }} categories</span></div>
+    <p class="muted">Tap to add. Use a word as often as you like.</p>
+    @if (typesLoading()) { <p role="status">Loading word categories...</p> }
+    @if (typesError()) { <div class="notice error" role="alert">{{ typesError() }} <button type="button" (click)="retryTypes.emit()" [disabled]="busy()">Retry categories</button></div> }
+    @if (!typesLoading() && !typesError() && groups().length === 0) { <p class="notice">No word categories are available yet.</p> }
+    <div class="category-list" cdkScrollable>
+      @for (group of groups(); track group.type.id; let i = $index) {
+        <details open class="category" [attr.data-tone]="i % 4">
+          <summary>{{ group.type.name }} <span>{{ group.loading ? '...' : group.words.length }}</span></summary>
+          @if (group.loading) { <p role="status">Loading {{ group.type.name }} words...</p> }
+          @if (group.error) { <div class="notice error" role="alert">{{ group.error }} <button type="button" (click)="retryWords.emit(group.type.id)" [disabled]="busy() || group.loading">Retry {{ group.type.name }}</button></div> }
+          @if (group.loaded && !group.error && group.words.length === 0) { <p class="muted">No words in this category yet.</p> }
+          <div cdkDropList [cdkDropListData]="group.words" [cdkDropListConnectedTo]="['sentence-drop']"
+               [cdkDropListSortingDisabled]="true" [cdkDropListHasAnchor]="true" [cdkDropListDisabled]="busy() || atLimit()" class="library-words">
+            @for (word of group.words; track word.id) {
+              <button cdkDrag [cdkDragData]="word" [cdkDragDisabled]="busy() || atLimit()" [cdkDragStartDelay]="{touch: 250, mouse: 0}"
+                (cdkDragStarted)="dragging.set(true)" (cdkDragEnded)="dragging.set(false)" type="button" class="library-word"
+                [disabled]="busy() || atLimit()" (click)="add(word)" [attr.aria-label]="'Add ' + word.text + ' (' + group.type.name + ')'">{{ word.text }}<span aria-hidden="true"> +</span></button>
+            }
+          </div>
+        </details>
+      }
+    </div>
+  </section>
+</div>

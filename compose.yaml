@@ -1,0 +1,50 @@
+name: tih-sentence-builder
+services:
+  sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set a strong local SQL administrator password}
+    volumes:
+      - sql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "SQLCMDPASSWORD=\"$$MSSQL_SA_PASSWORD\" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -Q 'SELECT 1' -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+  initialize:
+    profiles: ["initialize"]
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    depends_on:
+      sql:
+        condition: service_healthy
+    environment:
+      SQLCMDPASSWORD: ${MSSQL_SA_PASSWORD:?Set the local SQL administrator password}
+    volumes:
+      - ./deploy:/setup:ro
+      - ./backend/SentenceBuilder.Api/Persistence/Scripts:/scripts:ro
+    entrypoint: ["/bin/bash", "/setup/initialize-container.sh"]
+  api:
+    build:
+      context: .
+      dockerfile: backend/SentenceBuilder.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: "8080"
+      Https__Redirect: "false"
+      ConnectionStrings__SentenceBuilder: ${TIH_CONTAINER_CONNECTION:?Set the SQL-auth connection to sql and TIH_SentenceBuilder_Dev}
+    depends_on:
+      sql:
+        condition: service_healthy
+    expose: ["8080"]
+  frontend:
+    build:
+      context: ./frontend/sentence-builder-ui
+      args:
+        API_BASE_URL: /api
+    ports: ["127.0.0.1:8080:80"]
+    depends_on: [api]
+volumes:
+  sql-data:

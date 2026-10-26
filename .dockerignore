@@ -1,0 +1,15 @@
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/.angular
+**/TestResults
+.git
+.verification
+.env
+.env.*
+**/*.user
+**/*.pfx
+**/*.p12
+frontend
+docs

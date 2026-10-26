@@ -1,0 +1,10 @@
+<div class="site-shell">
+  <header class="site-header"><a class="brand" href="./" aria-label="TIH Sentence Builder home"><span class="brand-mark" aria-hidden="true">Sb.</span><span>Sentence Builder<span class="brand-caption">TIH</span></span></a><a class="collection-link" href="#saved-heading">Saved sentences &#8599;</a></header>
+  <main>
+    @if (success()) { <p class="notice success" role="status">{{ success() }}</p> }
+    @if (recalling()) { <p role="status">Loading sentence for editing...</p> }
+    <app-sentence-editor [groups]="groups()" [draft]="draft()" [editingId]="editingId()" [busy]="busy()" [saving]="saving()" [typesLoading]="typesLoading()" [typesError]="typesError()" [error]="editorError()" (addWord)="addWord($event)" (removeWord)="removeWord($event)" (moveWord)="moveWord($event)" (reorderWord)="reorderWord($event)" (saveDraft)="save()" (cancelDraft)="cancel()" (retryTypes)="loadTypes()" (retryWords)="loadWords($event)" />
+    <app-saved-sentences [result]="result()" [loading]="listLoading()" [busy]="busy()" [error]="listError()" (edit)="recall($event)" (pageChanged)="loadPage($event)" (refresh)="retryList()" />
+  </main>
+  <footer class="site-footer">TIH / Sentence Builder</footer>
+</div>

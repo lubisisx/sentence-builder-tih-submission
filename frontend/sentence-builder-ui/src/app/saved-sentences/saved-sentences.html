@@ -1,0 +1,13 @@
+<section class="panel saved" aria-labelledby="saved-heading" [attr.aria-busy]="loading()">
+  <div class="section-heading"><div><h2 id="saved-heading">Saved sentences</h2></div><button type="button" class="quiet" (click)="refresh.emit()" [disabled]="loading() || busy()">Refresh list</button></div>
+  <p class="muted">Newest first.</p>
+  @if (loading()) { <p role="status">Loading saved sentences...</p> }
+  @if (error()) { <div class="notice error" role="alert">{{ error() }} <button type="button" (click)="refresh.emit()" [disabled]="loading() || busy()">Retry list</button></div> }
+  @if (!loading() && !error() && result().items.length === 0) { <div class="empty-list"><span aria-hidden="true">&#9998;</span><h3>No sentences on this page yet</h3><p>Save your first sentence to start your collection.</p></div> }
+  <ol class="saved-list" aria-label="Saved sentences">
+    @for (sentence of result().items; track sentence.id) {
+      <li><div><p class="sentence-text">{{ sentence.text }}</p><p class="saved-meta">#{{ sentence.id }} &middot; <time [attr.datetime]="sentence.createdAtUtc">{{ sentence.createdAtUtc | date:'medium' }}</time></p></div><button type="button" class="secondary edit-sentence" (click)="edit.emit(sentence.id)" [disabled]="busy() || loading()" [attr.aria-label]="'Edit sentence ' + sentence.id">Edit</button></li>
+    }
+  </ol>
+  <nav class="pagination" aria-label="Sentence pages"><span>{{ result().totalCount }} {{ result().totalCount === 1 ? 'sentence' : 'sentences' }} &middot; Page {{ result().page }} of {{ pages() }}</span><div class="button-row"><button type="button" class="quiet" (click)="pageChanged.emit(result().page - 1)" [disabled]="loading() || busy() || result().page <= 1">Previous</button><button type="button" class="quiet" (click)="pageChanged.emit(result().page + 1)" [disabled]="loading() || busy() || result().page >= pages()">Next</button></div></nav>
+</section>
